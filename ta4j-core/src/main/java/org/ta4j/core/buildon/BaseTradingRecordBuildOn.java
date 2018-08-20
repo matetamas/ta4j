@@ -1,74 +1,56 @@
-/*
-  The MIT License (MIT)
+package org.ta4j.core.buildon;
 
-  Copyright (c) 2014-2017 Marc de Verdelhan & respective authors (see AUTHORS)
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of
-  this software and associated documentation files (the "Software"), to deal in
-  the Software without restriction, including without limitation the rights to
-  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-  the Software, and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-package org.ta4j.core;
+import org.ta4j.core.BaseTradingRecord;
+import org.ta4j.core.Decimal;
+import org.ta4j.core.Order;
+import org.ta4j.core.Trade;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 
-/**
- * Base implementation of a {@link TradingRecord}.
- * <p></p>
- */
-public class BaseTradingRecord implements TradingRecord {
+public class BaseTradingRecordBuildOn extends BaseTradingRecord implements TradingRecordBuildOn {
 
-	private static final long serialVersionUID = -4436851731855891220L;
+    private static final long serialVersionUID = -4436851731855891220L;
 
-	/** The recorded orders */
+    /** The recorded orders */
     private List<Order> orders = new ArrayList<Order>();
-    
+
     /** The recorded BUY orders */
     private List<Order> buyOrders = new ArrayList<Order>();
-    
+
     /** The recorded SELL orders */
     private List<Order> sellOrders = new ArrayList<Order>();
-    
+
     /** The recorded entry orders */
     private List<Order> entryOrders = new ArrayList<Order>();
-    
+
     /** The recorded exit orders */
     private List<Order> exitOrders = new ArrayList<Order>();
-    
+
     /** The recorded trades */
     private List<Trade> trades = new ArrayList<Trade>();
 
     /** The entry type (BUY or SELL) in the trading session */
     private Order.OrderType startingType;
-    
+
     /** The current non-closed trade (there's always one) */
     private Trade currentTrade;
+
+    private PriorityQueue<Trade> openedTrades = new PriorityQueue<>();
 
     /**
      * Constructor.
      */
-    public BaseTradingRecord() {
+    public BaseTradingRecordBuildOn() {
         this(Order.OrderType.BUY);
     }
-    
+
     /**
      * Constructor.
      * @param entryOrderType the {@link Order.OrderType order type} of entries in the trading session
      */
-    public BaseTradingRecord(Order.OrderType entryOrderType) {
+    public BaseTradingRecordBuildOn(Order.OrderType entryOrderType) {
         if (entryOrderType == null) {
             throw new IllegalArgumentException("Starting type must not be null");
         }
@@ -80,7 +62,7 @@ public class BaseTradingRecord implements TradingRecord {
      * Constructor.
      * @param orders the orders to be recorded (cannot be empty)
      */
-    public BaseTradingRecord(Order... orders) {
+    public BaseTradingRecordBuildOn(Order... orders) {
         this(orders[0].getType());
         for (Order o : orders) {
             boolean newOrderWillBeAnEntry = currentTrade.isNew();
@@ -96,12 +78,12 @@ public class BaseTradingRecord implements TradingRecord {
             recordOrder(newOrder, newOrderWillBeAnEntry);
         }
     }
-    
+
     @Override
     public Trade getCurrentTrade() {
         return currentTrade;
     }
-    
+
     @Override
     public void operate(int index, Decimal price, Decimal amount) {
         if (currentTrade.isClosed()) {
@@ -112,7 +94,7 @@ public class BaseTradingRecord implements TradingRecord {
         Order newOrder = currentTrade.operate(index, price, amount);
         recordOrder(newOrder, newOrderWillBeAnEntry);
     }
-    
+
     @Override
     public boolean enter(int index, Decimal price, Decimal amount) {
         if (currentTrade.isNew()) {
@@ -121,21 +103,26 @@ public class BaseTradingRecord implements TradingRecord {
         }
         return false;
     }
-    
+
     @Override
-    public boolean exit(int index, Decimal price, Decimal amount) {
+    public void buildOn(int index, Decimal price, Decimal amount) {
+        // Missing body :D
+    }
+
+    @Override
+    public boolean exit(int index, Decimal price, Decimal amount) { //TODO: final qualifier must be removed from ta4j
         if (currentTrade.isOpened()) {
             operate(index, price, amount);
             return true;
         }
         return false;
     }
-    
+
     @Override
     public List<Trade> getTrades() {
         return trades;
     }
-    
+
     @Override
     public Order getLastOrder() {
         if (!orders.isEmpty()) {
@@ -143,7 +130,7 @@ public class BaseTradingRecord implements TradingRecord {
         }
         return null;
     }
-    
+
     @Override
     public Order getLastOrder(Order.OrderType orderType) {
         if (Order.OrderType.BUY.equals(orderType) && !buyOrders.isEmpty()) {
@@ -153,7 +140,7 @@ public class BaseTradingRecord implements TradingRecord {
         }
         return null;
     }
-    
+
     @Override
     public Order getLastEntry() {
         if (!entryOrders.isEmpty()) {
@@ -161,7 +148,7 @@ public class BaseTradingRecord implements TradingRecord {
         }
         return null;
     }
-    
+
     @Override
     public Order getLastExit() {
         if (!exitOrders.isEmpty()) {
@@ -179,14 +166,14 @@ public class BaseTradingRecord implements TradingRecord {
         if (order == null) {
             throw new IllegalArgumentException("Order should not be null");
         }
-        
+
         // Storing the new order in entries/exits lists
         if (isEntry) {
             entryOrders.add(order);
         } else {
             exitOrders.add(order);
         }
-        
+
         // Storing the new order in orders list
         orders.add(order);
         if (Order.OrderType.BUY.equals(order.getType())) {

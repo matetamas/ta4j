@@ -37,10 +37,10 @@ public class LinearTransactionCostCriterion extends AbstractAnalysisCriterion {
 
     private double initialAmount;
 
-    private double a;
-    private double b;
+    protected double a;
+    protected double b;
 
-    private TotalProfitCriterion profit;
+    protected TotalProfitCriterion profit;
 
     /**
      * Constructor.

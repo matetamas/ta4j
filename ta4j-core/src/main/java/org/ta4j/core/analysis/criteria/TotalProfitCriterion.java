@@ -59,7 +59,7 @@ public class TotalProfitCriterion extends AbstractAnalysisCriterion {
      * @param trade a trade
      * @return the profit of the trade
      */
-    private double calculateProfit(TimeSeries series, Trade trade) {
+    protected double calculateProfit(TimeSeries series, Trade trade) {
         Decimal profit = Decimal.ONE;
         if (trade.isClosed()) {
             // use price of entry/exit order, if NaN use close price of underlying time series
