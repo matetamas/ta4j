@@ -34,28 +34,28 @@ public class BaseTradingRecord implements TradingRecord {
 	private static final long serialVersionUID = -4436851731855891220L;
 
 	/** The recorded orders */
-    private List<Order> orders = new ArrayList<Order>();
+    protected List<Order> orders = new ArrayList<Order>();
     
     /** The recorded BUY orders */
-    private List<Order> buyOrders = new ArrayList<Order>();
+    protected List<Order> buyOrders = new ArrayList<Order>();
     
     /** The recorded SELL orders */
-    private List<Order> sellOrders = new ArrayList<Order>();
+    protected List<Order> sellOrders = new ArrayList<Order>();
     
     /** The recorded entry orders */
-    private List<Order> entryOrders = new ArrayList<Order>();
+    protected List<Order> entryOrders = new ArrayList<Order>();
     
     /** The recorded exit orders */
-    private List<Order> exitOrders = new ArrayList<Order>();
+    protected List<Order> exitOrders = new ArrayList<Order>();
     
     /** The recorded trades */
-    private List<Trade> trades = new ArrayList<Trade>();
+    protected List<Trade> trades = new ArrayList<Trade>();
 
     /** The entry type (BUY or SELL) in the trading session */
-    private Order.OrderType startingType;
+    protected Order.OrderType startingType;
     
     /** The current non-closed trade (there's always one) */
-    private Trade currentTrade;
+    protected Trade currentTrade;
 
     /**
      * Constructor.
@@ -175,7 +175,7 @@ public class BaseTradingRecord implements TradingRecord {
      * @param order the order to be recorded
      * @param isEntry true if the order is an entry, false otherwise (exit)
      */
-    private void recordOrder(Order order, boolean isEntry) {
+    protected void recordOrder(Order order, boolean isEntry) {
         if (order == null) {
             throw new IllegalArgumentException("Order should not be null");
         }

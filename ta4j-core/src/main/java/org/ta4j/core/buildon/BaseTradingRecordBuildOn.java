@@ -5,39 +5,18 @@ import org.ta4j.core.Decimal;
 import org.ta4j.core.Order;
 import org.ta4j.core.Trade;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
 import java.util.PriorityQueue;
 
 public class BaseTradingRecordBuildOn extends BaseTradingRecord implements TradingRecordBuildOn {
 
     private static final long serialVersionUID = -4436851731855891220L;
 
-    /** The recorded orders */
-    private List<Order> orders = new ArrayList<Order>();
-
-    /** The recorded BUY orders */
-    private List<Order> buyOrders = new ArrayList<Order>();
-
-    /** The recorded SELL orders */
-    private List<Order> sellOrders = new ArrayList<Order>();
-
-    /** The recorded entry orders */
-    private List<Order> entryOrders = new ArrayList<Order>();
-
-    /** The recorded exit orders */
-    private List<Order> exitOrders = new ArrayList<Order>();
-
-    /** The recorded trades */
-    private List<Trade> trades = new ArrayList<Trade>();
-
-    /** The entry type (BUY or SELL) in the trading session */
-    private Order.OrderType startingType;
-
-    /** The current non-closed trade (there's always one) */
-    private Trade currentTrade;
-
-    private PriorityQueue<Trade> openedTrades = new PriorityQueue<>();
+    /*
+    * CurrentTrade is always the peek of the openedTrades.
+    * So anytime you make changes to openedTrades you have to run refreshTrade().
+    */
+    protected PriorityQueue<Trade> openedTrades = new PriorityQueue<>(new Fifo());
 
     /**
      * Constructor.
@@ -48,6 +27,7 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
 
     /**
      * Constructor.
+     *
      * @param entryOrderType the {@link Order.OrderType order type} of entries in the trading session
      */
     public BaseTradingRecordBuildOn(Order.OrderType entryOrderType) {
@@ -60,9 +40,10 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
 
     /**
      * Constructor.
+     *
      * @param orders the orders to be recorded (cannot be empty)
      */
-    public BaseTradingRecordBuildOn(Order... orders) {
+    private BaseTradingRecordBuildOn(Order... orders) {
         this(orders[0].getType());
         for (Order o : orders) {
             boolean newOrderWillBeAnEntry = currentTrade.isNew();
@@ -84,20 +65,46 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
         return currentTrade;
     }
 
+    protected void refreshTrade() {
+        if (!openedTrades.isEmpty()) {
+            currentTrade = openedTrades.peek();
+        } else {
+            currentTrade = new Trade(startingType);
+        }
+    }
+
     @Override
     public void operate(int index, Decimal price, Decimal amount) {
-        if (currentTrade.isClosed()) {
+        if (getCurrentTrade().isClosed()) {
             // Current trade closed, should not occur
             throw new IllegalStateException("Current trade should not be closed");
         }
-        boolean newOrderWillBeAnEntry = currentTrade.isNew();
-        Order newOrder = currentTrade.operate(index, price, amount);
+        Trade operatedTrade = getCurrentTrade();
+        boolean newOrderWillBeAnEntry = operatedTrade.isNew();
+        Order newOrder = operatedTrade.operate(index, price, amount);
+        if (newOrderWillBeAnEntry) {
+            // No refresh is needed, because it is the first element of the empty list
+            openedTrades.add(operatedTrade);
+        }
         recordOrder(newOrder, newOrderWillBeAnEntry);
+    }
+
+    public void operateBuildOn(int index, Decimal price, Decimal amount) {
+        if (getCurrentTrade().isClosed()) {
+            // Current trade closed, should not occur
+            throw new IllegalStateException("Current trade should not be closed " +
+                    "or openedTrades list is empty");
+        }
+        Trade builtOnTrade = new Trade(this.startingType);
+        Order newOrder = builtOnTrade.operate(index, price, amount);
+        openedTrades.add(builtOnTrade);
+        refreshTrade();
+        recordOrder(newOrder, true);
     }
 
     @Override
     public boolean enter(int index, Decimal price, Decimal amount) {
-        if (currentTrade.isNew()) {
+        if (getCurrentTrade().isNew()) {
             operate(index, price, amount);
             return true;
         }
@@ -105,64 +112,30 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
     }
 
     @Override
-    public void buildOn(int index, Decimal price, Decimal amount) {
-        // Missing body :D
-    }
-
-    @Override
-    public boolean exit(int index, Decimal price, Decimal amount) { //TODO: final qualifier must be removed from ta4j
-        if (currentTrade.isOpened()) {
-            operate(index, price, amount);
+    public boolean buildOn(int index, Decimal price, Decimal amount) {
+        if (getCurrentTrade().isOpened()) {
+            operateBuildOn(index, price, amount);
             return true;
         }
         return false;
     }
 
     @Override
-    public List<Trade> getTrades() {
-        return trades;
-    }
-
-    @Override
-    public Order getLastOrder() {
-        if (!orders.isEmpty()) {
-            return orders.get(orders.size() - 1);
+    public boolean exit(int index, Decimal price, Decimal amount) {
+        if (getCurrentTrade().isOpened()) {
+            operate(index, price, amount);
+            return true;
         }
-        return null;
-    }
-
-    @Override
-    public Order getLastOrder(Order.OrderType orderType) {
-        if (Order.OrderType.BUY.equals(orderType) && !buyOrders.isEmpty()) {
-            return buyOrders.get(buyOrders.size() - 1);
-        } else if (Order.OrderType.SELL.equals(orderType) && !sellOrders.isEmpty()) {
-            return sellOrders.get(sellOrders.size() - 1);
-        }
-        return null;
-    }
-
-    @Override
-    public Order getLastEntry() {
-        if (!entryOrders.isEmpty()) {
-            return entryOrders.get(entryOrders.size() - 1);
-        }
-        return null;
-    }
-
-    @Override
-    public Order getLastExit() {
-        if (!exitOrders.isEmpty()) {
-            return exitOrders.get(exitOrders.size() - 1);
-        }
-        return null;
+        return false;
     }
 
     /**
      * Records an order and the corresponding trade (if closed).
-     * @param order the order to be recorded
+     *
+     * @param order   the order to be recorded
      * @param isEntry true if the order is an entry, false otherwise (exit)
      */
-    private void recordOrder(Order order, boolean isEntry) {
+    protected void recordOrder(Order order, boolean isEntry) {
         if (order == null) {
             throw new IllegalArgumentException("Order should not be null");
         }
@@ -185,9 +158,18 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
         }
 
         // Storing the trade if closed
-        if (currentTrade.isClosed()) {
-            trades.add(currentTrade);
-            currentTrade = new Trade(startingType);
+        if (getCurrentTrade().isClosed()) {
+            trades.add(getCurrentTrade());
+            openedTrades.remove(getCurrentTrade());
+            refreshTrade();
+        }
+    }
+
+    private class Fifo implements Comparator<Trade> {
+
+        @Override
+        public int compare(Trade o1, Trade o2) {
+            return Integer.compare(o2.getEntry().getIndex(), o1.getEntry().getIndex());
         }
     }
 }

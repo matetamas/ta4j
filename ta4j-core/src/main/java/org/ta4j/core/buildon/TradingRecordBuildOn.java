@@ -5,5 +5,5 @@ import org.ta4j.core.TradingRecord;
 
 public interface TradingRecordBuildOn extends TradingRecord {
 
-    void buildOn(int index, Decimal price, Decimal amount);
+    boolean buildOn(int index, Decimal price, Decimal amount);
 }
