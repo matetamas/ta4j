@@ -2,66 +2,81 @@ package org.ta4j.core.buildon;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ta4j.core.Decimal;
 import org.ta4j.core.Trade;
+import org.ta4j.core.TradingRecord;
+
+import static org.ta4j.core.buildon.BaseStrategyBuildOn.*;
 
 public class BaseOperatorBuildOn implements OperatorBuildOn {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private StrategyBuildOn strategy;
-    private TradingRecordBuildOn tradingRecord;
+    private StrategyAction action;
     private boolean isAggressive;
 
-    public BaseOperatorBuildOn(StrategyBuildOn strategy, TradingRecordBuildOn tradingRecord) {
-        this(strategy, tradingRecord, true);
+    public BaseOperatorBuildOn(StrategyBuildOn strategy) {
+        this(strategy,true);
     }
 
-    public BaseOperatorBuildOn(StrategyBuildOn strategy, TradingRecordBuildOn tradingRecord, boolean isAggressive) {
-        if (strategy == null || tradingRecord == null)
-            throw new IllegalArgumentException("Inputs should not be null!");
+    public BaseOperatorBuildOn(StrategyBuildOn strategy, boolean isAggressive) {
+        if (strategy == null)
+            throw new IllegalArgumentException("Strategy should not be null!");
         this.strategy = strategy;
-        this.tradingRecord = tradingRecord;
+        this.action = StrategyAction.ENTER;
         this.isAggressive = isAggressive;
     }
 
     @Override
-    public void operate(int index, Decimal price, Decimal amount) {
+    public boolean operate(int index, TradingRecord tradingRecord) {
         Trade trade = tradingRecord.getCurrentTrade();
         if (trade.isNew()) {
-            enter(index, price, amount);
+            return  strategy.shouldEnter(index, tradingRecord);
         } else if (trade.isOpened() && isAggressive) {
-            buildOnOrExitAggressive(index, price, amount);
+            return buildOnOrExitAggressive(index, tradingRecord);
         } else if (trade.isOpened() && !isAggressive) {
-            buildOnOrExitDefensive(index, price, amount);
+            return buildOnOrExitDefensive(index, tradingRecord);
+        } else {
+            return false;
         }
     }
 
-    private void enter(int index, Decimal closePrice, Decimal amount) {
+    private boolean enter(int index, TradingRecord tradingRecord) {
         // Our strategy should enter
         if (strategy.shouldEnter(index, tradingRecord)) {
             LOG.trace("Strategy should ENTER on " + index);
-            tradingRecord.enter(index, closePrice, amount);
+            this.action = StrategyAction.ENTER;
+            return true;
+        } else {
+            return false;
         }
     }
 
-    private void buildOnOrExitAggressive(int index, Decimal closePrice, Decimal amount) {
+    private boolean buildOnOrExitAggressive(int index, TradingRecord tradingRecord) {
         // Our strategy should build on or exit opened position
         if (strategy.shouldBuildOn(index, tradingRecord)) {
             LOG.trace("Strategy should BUILD ON on " + index);
-            tradingRecord.buildOn(index, closePrice, amount);
+            this.action = StrategyAction.BUILDON;
+            return true;
         } else if (strategy.shouldExit(index, tradingRecord)) {
             LOG.trace("Strategy should EXIT on " + index);
-            tradingRecord.exit(index, closePrice, amount);
+            this.action = StrategyAction.EXIT;
+            return true;
+        } else {
+            return false;
         }
     }
 
-    private void buildOnOrExitDefensive(int index, Decimal closePrice, Decimal amount) {
+    private boolean buildOnOrExitDefensive(int index, TradingRecord tradingRecord) {
         // Our strategy should exit or build on opened position
         if (strategy.shouldExit(index, tradingRecord)) {
             LOG.trace("Strategy should EXIT on " + index);
-            tradingRecord.exit(index, closePrice, amount);
+            this.action = StrategyAction.EXIT;
+            return true;
         } else if (strategy.shouldBuildOn(index, tradingRecord)) {
             LOG.trace("Strategy should BUILD ON on " + index);
-            tradingRecord.buildOn(index, closePrice, amount);
+            this.action = StrategyAction.BUILDON;
+            return true;
+        } else {
+            return false;
         }
     }
 

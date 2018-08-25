@@ -1,22 +1,33 @@
 package org.ta4j.core.buildon;
 
-import org.ta4j.core.BaseTradingRecord;
-import org.ta4j.core.Decimal;
 import org.ta4j.core.Order;
 import org.ta4j.core.Trade;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.List;
 
-public class BaseTradingRecordBuildOn extends BaseTradingRecord implements TradingRecordBuildOn {
+public class BaseTradingRecordBuildOn implements TradingRecordBuildOn {
 
-    private static final long serialVersionUID = -4436851731855891220L;
+    /** The recorded orders */
+    protected List<Order> orders = new ArrayList<Order>();
 
-    /*
-    * CurrentTrade is always the peek of the openedTrades.
-    * So anytime you make changes to openedTrades you have to run refreshTrade().
-    */
-    protected PriorityQueue<Trade> openedTrades = new PriorityQueue<>(new Fifo());
+    /** The recorded BUY orders */
+    protected List<Order> buyOrders = new ArrayList<Order>();
+
+    /** The recorded SELL orders */
+    protected List<Order> sellOrders = new ArrayList<Order>();
+
+    /** The recorded entry orders */
+    protected List<Order> entryOrders = new ArrayList<Order>();
+
+    /** The recorded exit orders */
+    protected List<Order> exitOrders = new ArrayList<Order>();
+
+    /** The recorded trades */
+    protected List<Trade> trades = new ArrayList<Trade>();
+
+    /** The entry type (BUY or SELL) in the trading session */
+    protected Order.OrderType startingType;
 
     /**
      * Constructor.
@@ -35,113 +46,38 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
             throw new IllegalArgumentException("Starting type must not be null");
         }
         this.startingType = entryOrderType;
-        currentTrade = new Trade(entryOrderType);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param orders the orders to be recorded (cannot be empty)
-     */
-    private BaseTradingRecordBuildOn(Order... orders) {
-        this(orders[0].getType());
-        for (Order o : orders) {
-            boolean newOrderWillBeAnEntry = currentTrade.isNew();
-            if (newOrderWillBeAnEntry && o.getType() != startingType) {
-                // Special case for entry/exit types reversal
-                // E.g.: BUY, SELL,
-                //    BUY, SELL,
-                //    SELL, BUY,
-                //    BUY, SELL
-                currentTrade = new Trade(o.getType());
-            }
-            Order newOrder = currentTrade.operate(o.getIndex(), o.getPrice(), o.getAmount());
-            recordOrder(newOrder, newOrderWillBeAnEntry);
-        }
-    }
-
-    @Override
-    public Trade getCurrentTrade() {
-        return currentTrade;
-    }
-
-    protected void refreshTrade() {
-        if (!openedTrades.isEmpty()) {
-            currentTrade = openedTrades.peek();
-        } else {
-            currentTrade = new Trade(startingType);
-        }
-    }
-
-    @Override
-    public void operate(int index, Decimal price, Decimal amount) {
-        if (getCurrentTrade().isClosed()) {
-            // Current trade closed, should not occur
-            throw new IllegalStateException("Current trade should not be closed");
-        }
-        Trade operatedTrade = getCurrentTrade();
-        boolean newOrderWillBeAnEntry = operatedTrade.isNew();
-        Order newOrder = operatedTrade.operate(index, price, amount);
-        if (newOrderWillBeAnEntry) {
-            // No refresh is needed, because it is the first element of the empty list
-            openedTrades.add(operatedTrade);
-        }
-        recordOrder(newOrder, newOrderWillBeAnEntry);
-    }
-
-    public void operateBuildOn(int index, Decimal price, Decimal amount) {
-        if (getCurrentTrade().isClosed()) {
-            // Current trade closed, should not occur
-            throw new IllegalStateException("Current trade should not be closed " +
-                    "or openedTrades list is empty");
-        }
-        Trade builtOnTrade = new Trade(this.startingType);
-        Order newOrder = builtOnTrade.operate(index, price, amount);
-        openedTrades.add(builtOnTrade);
-        refreshTrade();
-        recordOrder(newOrder, true);
-    }
-
-    @Override
-    public boolean enter(int index, Decimal price, Decimal amount) {
-        if (getCurrentTrade().isNew()) {
-            operate(index, price, amount);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean buildOn(int index, Decimal price, Decimal amount) {
-        if (getCurrentTrade().isOpened()) {
-            operateBuildOn(index, price, amount);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean exit(int index, Decimal price, Decimal amount) {
-        if (getCurrentTrade().isOpened()) {
-            operate(index, price, amount);
-            return true;
-        }
-        return false;
     }
 
     /**
      * Records an order and the corresponding trade (if closed).
      *
-     * @param order   the order to be recorded
-     * @param isEntry true if the order is an entry, false otherwise (exit)
+     * @param trade   the trade, and order inside to be recorded
      */
-    protected void recordOrder(Order order, boolean isEntry) {
+    public void recordTrade(Trade trade) {
+        Order order = null;
+        if (trade == null) {
+            throw new IllegalArgumentException("Trade should not be null");
+        } else if (trade.isNew()) {
+            throw new IllegalStateException("Trade should not be new");
+        } else if (trade.isOpened()) {
+            order = trade.getEntry();
+        } else if (trade.isClosed()) {
+            order = trade.getExit();
+        }
+        recordOrder(order);
+
+        // Storing the trade if closed
+        if (trade.isClosed()) {
+            trades.add(trade);
+        }
+    }
+
+    private void recordOrder(Order order) {
         if (order == null) {
             throw new IllegalArgumentException("Order should not be null");
         }
-
         // Storing the new order in entries/exits lists
-        if (isEntry) {
+        if (this.startingType.equals(order.getType())) {
             entryOrders.add(order);
         } else {
             exitOrders.add(order);
@@ -156,20 +92,44 @@ public class BaseTradingRecordBuildOn extends BaseTradingRecord implements Tradi
             // Storing the new order in sell orders list
             sellOrders.add(order);
         }
-
-        // Storing the trade if closed
-        if (getCurrentTrade().isClosed()) {
-            trades.add(getCurrentTrade());
-            openedTrades.remove(getCurrentTrade());
-            refreshTrade();
-        }
     }
 
-    private class Fifo implements Comparator<Trade> {
+    @Override
+    public List<Trade> getTrades() {
+        return trades;
+    }
 
-        @Override
-        public int compare(Trade o1, Trade o2) {
-            return Integer.compare(o2.getEntry().getIndex(), o1.getEntry().getIndex());
+    @Override
+    public Order getLastOrder() {
+        if (!orders.isEmpty()) {
+            return orders.get(orders.size() - 1);
         }
+        return null;
+    }
+
+    @Override
+    public Order getLastOrder(Order.OrderType orderType) {
+        if (Order.OrderType.BUY.equals(orderType) && !buyOrders.isEmpty()) {
+            return buyOrders.get(buyOrders.size() - 1);
+        } else if (Order.OrderType.SELL.equals(orderType) && !sellOrders.isEmpty()) {
+            return sellOrders.get(sellOrders.size() - 1);
+        }
+        return null;
+    }
+
+    @Override
+    public Order getLastEntry() {
+        if (!entryOrders.isEmpty()) {
+            return entryOrders.get(entryOrders.size() - 1);
+        }
+        return null;
+    }
+
+    @Override
+    public Order getLastExit() {
+        if (!exitOrders.isEmpty()) {
+            return exitOrders.get(exitOrders.size() - 1);
+        }
+        return null;
     }
 }

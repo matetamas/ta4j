@@ -14,6 +14,10 @@ public class BaseStrategyBuildOn extends BaseStrategy implements StrategyBuildOn
     /** The buildOn rule: used to build on the existing position */
     private Rule buildOnRule;
 
+    public enum StrategyAction {
+        ENTER, BUILDON, EXIT
+    }
+
     /**
      * Constructor.
      * @param entryRule the entry rule

@@ -1,7 +1,7 @@
 package org.ta4j.core.buildon;
 
-import org.ta4j.core.Decimal;
+import org.ta4j.core.TradingRecord;
 
 public interface OperatorBuildOn {
-    void operate(int index, Decimal price, Decimal amount);
+    boolean operate(int index, TradingRecord tradingRecord);
 }
