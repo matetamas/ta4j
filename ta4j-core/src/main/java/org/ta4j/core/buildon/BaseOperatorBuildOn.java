@@ -21,7 +21,7 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
         if (strategy == null)
             throw new IllegalArgumentException("Strategy should not be null!");
         this.strategy = strategy;
-        this.action = StrategyAction.ENTER;
+        this.action = StrategyAction.NOTHING;
         this.isAggressive = isAggressive;
     }
 
@@ -29,7 +29,7 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
     public boolean operate(int index, TradingRecord tradingRecord) {
         Trade trade = tradingRecord.getCurrentTrade();
         if (trade.isNew()) {
-            return  strategy.shouldEnter(index, tradingRecord);
+            return  enter(index, tradingRecord);
         } else if (trade.isOpened() && isAggressive) {
             return buildOnOrExitAggressive(index, tradingRecord);
         } else if (trade.isOpened() && !isAggressive) {
@@ -43,9 +43,10 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
         // Our strategy should enter
         if (strategy.shouldEnter(index, tradingRecord)) {
             LOG.trace("Strategy should ENTER on " + index);
-            this.action = StrategyAction.ENTER;
+            setAction(StrategyAction.ENTER);
             return true;
         } else {
+            setAction(StrategyAction.NOTHING);
             return false;
         }
     }
@@ -54,13 +55,14 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
         // Our strategy should build on or exit opened position
         if (strategy.shouldBuildOn(index, tradingRecord)) {
             LOG.trace("Strategy should BUILD ON on " + index);
-            this.action = StrategyAction.BUILDON;
+            setAction(StrategyAction.BUILDON);
             return true;
         } else if (strategy.shouldExit(index, tradingRecord)) {
             LOG.trace("Strategy should EXIT on " + index);
-            this.action = StrategyAction.EXIT;
+            setAction(StrategyAction.EXIT);
             return true;
         } else {
+            setAction(StrategyAction.NOTHING);
             return false;
         }
     }
@@ -69,13 +71,14 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
         // Our strategy should exit or build on opened position
         if (strategy.shouldExit(index, tradingRecord)) {
             LOG.trace("Strategy should EXIT on " + index);
-            this.action = StrategyAction.EXIT;
+            setAction(StrategyAction.EXIT);
             return true;
         } else if (strategy.shouldBuildOn(index, tradingRecord)) {
             LOG.trace("Strategy should BUILD ON on " + index);
-            this.action = StrategyAction.BUILDON;
+            setAction(StrategyAction.BUILDON);
             return true;
         } else {
+            setAction(StrategyAction.NOTHING);
             return false;
         }
     }
@@ -87,4 +90,8 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
     public void setDefensive() {
         this.isAggressive = false;
     }
+
+    public StrategyAction getAction() {return action;}
+
+    protected void setAction(StrategyAction action) {this.action = action;}
 }

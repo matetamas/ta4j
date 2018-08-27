@@ -15,7 +15,7 @@ public class BaseStrategyBuildOn extends BaseStrategy implements StrategyBuildOn
     private Rule buildOnRule;
 
     public enum StrategyAction {
-        ENTER, BUILDON, EXIT
+        ENTER, BUILDON, EXIT, NOTHING
     }
 
     /**

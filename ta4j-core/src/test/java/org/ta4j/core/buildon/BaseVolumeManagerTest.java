@@ -6,12 +6,12 @@ import org.ta4j.core.Order;
 
 import static org.junit.Assert.assertEquals;
 
-public class VolumeManagerImplTest {
+public class BaseVolumeManagerTest {
     private double delta = 0.1;
 
     @Test
     public void testDecimalCalculateAmount() {
-        VolumeManager vm = new VolumeManagerImpl(Decimal.valueOf(10));
+        VolumeManager vm = new BaseVolumeManager(Decimal.valueOf(10));
         Decimal res = vm.calculateAmount(Decimal.NaN);
         assertEquals(10, res.doubleValue(), delta);
     }
@@ -19,7 +19,7 @@ public class VolumeManagerImplTest {
     @Test
     public void testOrderCalculateAmount() {
         Order open = Order.buyAt(0, null, null);
-        VolumeManager vm = new VolumeManagerImpl(Decimal.valueOf(10));
+        VolumeManager vm = new BaseVolumeManager(Decimal.valueOf(10));
         Decimal res = vm.calculateAmount(open);
         assertEquals(10, res.doubleValue(), delta);
     }

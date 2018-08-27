@@ -3,10 +3,10 @@ package org.ta4j.core.buildon;
 import org.ta4j.core.Decimal;
 import org.ta4j.core.Order;
 
-public class VolumeManagerImpl implements VolumeManager {
+public class BaseVolumeManager implements VolumeManager {
     private Decimal volume;
 
-    public VolumeManagerImpl(Decimal volume) {
+    public BaseVolumeManager(Decimal volume) {
         this.volume = volume;
     }
 

@@ -25,7 +25,7 @@ public class StocksTimeSeriesManagerTest {
     @Before
     public void setUp() {
         Cash cash = new Cash(Decimal.valueOf(1000000), false);
-        VolumeManager vm = new VolumeManagerImpl(Decimal.valueOf(10));
+        VolumeManager vm = new BaseVolumeManager(Decimal.valueOf(10));
 
         final DateTimeFormatter dtf = DateTimeFormatter.ISO_ZONED_DATE_TIME;
         seriesForRun = new MockTimeSeries(
