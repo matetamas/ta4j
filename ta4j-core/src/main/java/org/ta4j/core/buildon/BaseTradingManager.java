@@ -36,6 +36,7 @@ public class BaseTradingManager implements TradingManager { //TODO finish implem
             throw new IllegalArgumentException("Starting type must not be null");
         }
         this.startingType = entryOrderType;
+        currentTrade = new Trade(entryOrderType);
     }
 
     @Override
@@ -52,22 +53,25 @@ public class BaseTradingManager implements TradingManager { //TODO finish implem
     }
 
     @Override
-    public void operate(int index, Decimal price, Decimal amount) {
+    public Trade operate(int index, Decimal price, Decimal amount) {
         if (getCurrentTrade().isClosed()) {
             // Current trade closed, should not occur
             throw new IllegalStateException("Current trade should not be closed");
         }
         Trade operatedTrade = getCurrentTrade();
-        boolean newOrderWillBeAnEntry = operatedTrade.isNew();
+//        boolean newOrderWillBeAnEntry = operatedTrade.isNew();
         Order newOrder = operatedTrade.operate(index, price, amount);
-        if (newOrderWillBeAnEntry) {
-            // No refresh is needed, because it is the first element of the empty list
+        if (operatedTrade.isOpened()) {
+            // Refresh is needed every time a new trade is added, has to recheck the currentTrade
             openedTrades.add(operatedTrade);
+        } else if (operatedTrade.isClosed()) {
+            openedTrades.remove(operatedTrade);
         }
-//        recordTrade(newOrder, newOrderWillBeAnEntry);
+        refreshTrade();
+        return operatedTrade;
     }
 
-    public void operateBuildOn(int index, Decimal price, Decimal amount) {
+    public Trade operateBuildOn(int index, Decimal price, Decimal amount) {
         if (getCurrentTrade().isClosed()) {
             // Current trade closed, should not occur
             throw new IllegalStateException("Current trade should not be closed " +
@@ -77,40 +81,42 @@ public class BaseTradingManager implements TradingManager { //TODO finish implem
         Order newOrder = builtOnTrade.operate(index, price, amount);
         openedTrades.add(builtOnTrade);
         refreshTrade();
-//        recordTrade(newOrder, true);
+        return builtOnTrade;
     }
 
     @Override
-    public boolean enter(int index, Decimal price, Decimal amount) {
+    public Trade enter(int index, Decimal price, Decimal amount) {
         if (getCurrentTrade().isNew()) {
-            operate(index, price, amount);
-            return true;
+            return operate(index, price, amount);
         }
-        return false;
+        return null;
     }
 
     @Override
-    public boolean buildOn(int index, Decimal price, Decimal amount) {
+    public Trade buildOn(int index, Decimal price, Decimal amount) {
         if (getCurrentTrade().isOpened()) {
-            operateBuildOn(index, price, amount);
-            return true;
+            return operateBuildOn(index, price, amount);
         }
-        return false;
+        return null;
     }
 
     @Override
-    public boolean exit(int index, Decimal price, Decimal amount) {
+    public Trade exit(int index, Decimal price, Decimal amount) {
         if (getCurrentTrade().isOpened()) {
-            operate(index, price, amount);
-            return true;
+            return operate(index, price, amount);
         }
-        return false;
+        return null;
     }
 
     private class Fifo implements Comparator<Trade> {
         @Override
         public int compare(Trade o1, Trade o2) {
-            return Integer.compare(o2.getEntry().getIndex(), o1.getEntry().getIndex());
+            return Integer.compare(o1.getEntry().getIndex(), o2.getEntry().getIndex());
         }
+    }
+
+    @Override
+    public PriorityQueue<Trade> getOpenedTrades() {
+        return openedTrades;
     }
 }

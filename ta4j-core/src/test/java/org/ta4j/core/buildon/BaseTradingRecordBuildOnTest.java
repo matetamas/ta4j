@@ -14,35 +14,43 @@ public class BaseTradingRecordBuildOnTest {
     @Before
     @Test
     public void setUp() {
+        Trade openTrade1 = new Trade();
+        openTrade1.operate(0, Decimal.NaN, Decimal.NaN);
+
+        Trade closeTrade1 = new Trade();
+        closeTrade1.operate(0, Decimal.NaN, Decimal.NaN);
+        closeTrade1.operate(3, Decimal.NaN, Decimal.NaN);
+
+        Trade openTrade2 = new Trade();
+        openTrade2.operate(7, Decimal.NaN, Decimal.NaN);
+
+        Trade closeTrade2 = new Trade();
+        closeTrade2.operate(7, Decimal.NaN, Decimal.NaN);
+        closeTrade2.operate(8, Decimal.NaN, Decimal.NaN);
+
+        Trade openSellTrade1 = new Trade(Order.OrderType.SELL);
+        openSellTrade1.operate(9, Decimal.NaN, Decimal.NaN);
+
+        Trade openSellTrade2 = new Trade(Order.OrderType.SELL);
+        openSellTrade2.operate(10, Decimal.NaN, Decimal.NaN);
+
         emptyRecord = new BaseTradingRecordBuildOn();
 
         openedRecord = new BaseTradingRecordBuildOn();
-        assertTrue(openedRecord.enter(0, Decimal.NaN, Decimal.NaN));
-        assertTrue(openedRecord.exit(3, Decimal.NaN, Decimal.NaN));
-        assertTrue(openedRecord.enter(7, Decimal.NaN, Decimal.NaN));
+        openedRecord.recordTrade(closeTrade1);
+        openedRecord.recordTrade(openTrade2);
 
         closedRecord = new BaseTradingRecordBuildOn();
-        assertTrue(closedRecord.enter(0, Decimal.NaN, Decimal.NaN));
-        assertTrue(closedRecord.exit(3, Decimal.NaN, Decimal.NaN));
-        assertTrue(closedRecord.enter(7, Decimal.NaN, Decimal.NaN));
-        assertTrue(closedRecord.exit(8, Decimal.NaN, Decimal.NaN));
+        closedRecord.recordTrade(closeTrade1);
+        closedRecord.recordTrade(closeTrade2);
 
         doubleOpenedRecord = new BaseTradingRecordBuildOn();
-        assertTrue(doubleOpenedRecord.enter(0, Decimal.NaN, Decimal.NaN));
-        assertTrue(doubleOpenedRecord.buildOn(9, Decimal.NaN, Decimal.NaN));
+        doubleOpenedRecord.recordTrade(openTrade1);
+        doubleOpenedRecord.recordTrade(openTrade2);
 
         doubleClosedRecord = new BaseTradingRecordBuildOn(Order.OrderType.SELL);
-        assertTrue(doubleClosedRecord.enter(0, Decimal.NaN, Decimal.NaN));
-        assertTrue(doubleClosedRecord.buildOn(10, Decimal.NaN, Decimal.NaN));
-    }
-
-    @Test
-    public void getCurrentTrade() {
-        assertTrue(emptyRecord.getCurrentTrade().isNew());
-        assertTrue(openedRecord.getCurrentTrade().isOpened());
-        assertTrue(closedRecord.getCurrentTrade().isNew());
-        assertTrue(doubleOpenedRecord.getCurrentTrade().isOpened());
-        assertTrue(doubleClosedRecord.getCurrentTrade().isOpened());
+        doubleClosedRecord.recordTrade(openSellTrade1);
+        doubleClosedRecord.recordTrade(openSellTrade2);
     }
 
     @Test
@@ -78,15 +86,6 @@ public class BaseTradingRecordBuildOnTest {
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.NaN), record.getLastOrder(Order.OrderType.SELL));
         assertEquals(Order.buyAt(5, Decimal.NaN, Decimal.NaN), record.getLastEntry());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.NaN), record.getLastExit());
-    }
-
-    @Test
-    public void isClosed() {
-        assertTrue(emptyRecord.isClosed());
-        assertFalse(openedRecord.isClosed());
-        assertTrue(closedRecord.isClosed());
-        assertFalse(doubleOpenedRecord.isClosed());
-        assertFalse(doubleClosedRecord.isClosed());
     }
 
     @Test

@@ -29,17 +29,17 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
     public boolean operate(int index, TradingRecord tradingRecord) {
         Trade trade = tradingRecord.getCurrentTrade();
         if (trade.isNew()) {
-            return  enter(index, tradingRecord);
+            return shouldEnter(index, tradingRecord);
         } else if (trade.isOpened() && isAggressive) {
-            return buildOnOrExitAggressive(index, tradingRecord);
+            return shouldBuildOnOrExitAggressive(index, tradingRecord);
         } else if (trade.isOpened() && !isAggressive) {
-            return buildOnOrExitDefensive(index, tradingRecord);
+            return shouldBuildOnOrExitDefensive(index, tradingRecord);
         } else {
             return false;
         }
     }
 
-    private boolean enter(int index, TradingRecord tradingRecord) {
+    private boolean shouldEnter(int index, TradingRecord tradingRecord) {
         // Our strategy should enter
         if (strategy.shouldEnter(index, tradingRecord)) {
             LOG.trace("Strategy should ENTER on " + index);
@@ -51,7 +51,7 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
         }
     }
 
-    private boolean buildOnOrExitAggressive(int index, TradingRecord tradingRecord) {
+    private boolean shouldBuildOnOrExitAggressive(int index, TradingRecord tradingRecord) {
         // Our strategy should build on or exit opened position
         if (strategy.shouldBuildOn(index, tradingRecord)) {
             LOG.trace("Strategy should BUILD ON on " + index);
@@ -67,7 +67,7 @@ public class BaseOperatorBuildOn implements OperatorBuildOn {
         }
     }
 
-    private boolean buildOnOrExitDefensive(int index, TradingRecord tradingRecord) {
+    private boolean shouldBuildOnOrExitDefensive(int index, TradingRecord tradingRecord) {
         // Our strategy should exit or build on opened position
         if (strategy.shouldExit(index, tradingRecord)) {
             LOG.trace("Strategy should EXIT on " + index);
