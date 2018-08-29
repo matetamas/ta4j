@@ -140,4 +140,53 @@ public class BaseTradingManagerTest {
         assertTrue(doubleClosedRecord.getCurrentTrade().isOpened());
         assertFalse(doubleClosedRecord.isClosed());
     }
+
+    @Test
+    public void nullArgumentException() {
+        try {
+            BaseTradingManager bm = new BaseTradingManager(null);
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void enterAfterEnterException() {
+        TradingManager closedRecord = new BaseTradingManager();
+        closedRecord.enter(0, Decimal.NaN, Decimal.NaN);
+        assertNull(closedRecord.enter(10, Decimal.NaN, Decimal.NaN));
+    }
+
+    @Test
+    public void buildOnException() {
+        TradingManager closedRecord = new BaseTradingManager();
+        assertNull(closedRecord.buildOn(10, Decimal.NaN, Decimal.NaN));
+    }
+
+    @Test
+    public void exitException() {
+        TradingManager closedRecord = new BaseTradingManager();
+        assertNull(closedRecord.exit(10, Decimal.NaN, Decimal.NaN));
+    }
+
+    @Test
+    public void enterAfterEnterUseInterfaceMethodException() {
+        TradingManager closedRecord = new BaseTradingManager();
+        closedRecord.operate(0);
+        assertNull(closedRecord.enter(10));
+    }
+
+    @Test
+    public void buildOnUseInterfaceMethodException() {
+        TradingManager closedRecord = new BaseTradingManager();
+        assertNull(closedRecord.buildOn(10));
+    }
+
+    @Test
+    public void exitUseInterfaceMethodException() {
+        TradingManager closedRecord = new BaseTradingManager();
+        assertNull(closedRecord.exit(10));
+    }
 }
