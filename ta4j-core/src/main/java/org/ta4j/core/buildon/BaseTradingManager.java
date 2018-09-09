@@ -2,6 +2,7 @@ package org.ta4j.core.buildon;
 
 import org.ta4j.core.Decimal;
 import org.ta4j.core.Order;
+import org.ta4j.core.Order.OrderType;
 import org.ta4j.core.Trade;
 
 import java.util.Comparator;
@@ -14,7 +15,7 @@ import static org.ta4j.core.buildon.BaseStrategyBuildOn.*;
 public class BaseTradingManager implements TradingManager {
 
     /** The entry type (BUY or SELL) in the trading session */
-    protected Order.OrderType startingType;
+    protected OrderType startingType;
 
     /** The current non-closed trade (there's always one) */
     protected Trade currentTrade;
@@ -34,14 +35,14 @@ public class BaseTradingManager implements TradingManager {
     /**
      * Constructor.
      */
-    public BaseTradingManager() {this(Order.OrderType.BUY);}
+    public BaseTradingManager() {this(OrderType.BUY);}
 
     /**
      * Constructor.
      *
-     * @param entryOrderType the {@link Order.OrderType order type} of entries in the trading session
+     * @param entryOrderType the {@link OrderType order type} of entries in the trading session
      */
-    public BaseTradingManager(Order.OrderType entryOrderType) {
+    public BaseTradingManager(OrderType entryOrderType) {
         if (entryOrderType == null) {
             throw new IllegalArgumentException("Starting type must not be null");
         }
@@ -61,6 +62,7 @@ public class BaseTradingManager implements TradingManager {
         return openedTrades;
     }
 
+    // Refresh is needed every time a trade is added or removed, has to recheck the currentTrade
     protected void refreshTrade() {
         if (!openedTrades.isEmpty()) {
             currentTrade = openedTrades.peek();
@@ -76,7 +78,6 @@ public class BaseTradingManager implements TradingManager {
         checkOperatedTradeState(operatedTrade);
         if (operatedTrade.isNew()) {
             newOrder = operatedTrade.operate(index, price, amount);
-            // Refresh is needed every time a new trade is added, has to recheck the currentTrade
             openedTrades.add(operatedTrade);
             refreshTrade();
             this.action = StrategyAction.ENTER;
@@ -95,6 +96,7 @@ public class BaseTradingManager implements TradingManager {
             newOrder = builtOnTrade.operate(index, price, amount);
             openedTrades.add(builtOnTrade);
             refreshTrade();
+            operatedTrade = builtOnTrade;
             this.action = StrategyAction.BUILDON;
             return true;
         }
@@ -102,56 +104,50 @@ public class BaseTradingManager implements TradingManager {
     }
 
     @Override
-    public boolean exit(int index, Decimal price, Decimal amount) {
-        operatedTrade = getCurrentTrade();
+    public boolean exit(int index, Decimal price, Decimal exitAmount) {
         Order newOrder;
-        checkOperatedTradeState(operatedTrade);
-        if (operatedTrade.isOpened()) {
-//            Should be enabled, when Trade.equals() method is corrected,
-//            otherwise throws NPE
-//            if (!openedTrades.contains(operatedTrade)) {
-//                throw new IllegalArgumentException ("Current trade is not contained in opened Trades");
-//            }
-            Decimal entryAmount = operatedTrade.getEntry().getAmount();
+        Trade operatedExitTrade = getCurrentTrade();
+        checkOperatedTradeState(operatedExitTrade);
+//      Should be enabled, when Trade.equals() method is corrected,
+//      otherwise throws NPE
+//      if (!openedTrades.contains(operatedExitTrade)) {
+//          throw new IllegalArgumentException ("Current trade is not contained in opened Trades");
+//      }
+        if (operatedExitTrade.isNew()) return false;
+        while (!openedTrades.isEmpty() && !exitAmount.equals(Decimal.ZERO)) {
             closedTrades = new LinkedList<>();
-            if (entryAmount.equals(amount)) {
-                newOrder = operatedTrade.operate(index, price, amount);
-                openedTrades.remove(operatedTrade);
+            do {
+                Order entryOrder = operatedExitTrade.getEntry();
+                Decimal entryAmount = entryOrder.getAmount();
+                openedTrades.remove(operatedExitTrade);
                 refreshTrade();
-                closedTrades.add(operatedTrade);
-            } else if (entryAmount.isGreaterThan(amount)) {
-                Order entryOrder = operatedTrade.getEntry();
-                openedTrades.remove(operatedTrade);
-                Order newEntryOrder = createOrder(entryOrder.getType(),
-                        entryOrder.getIndex(),
-                        entryOrder.getPrice(),
-                        amount);
-                Order newExitOrder = createOrder(entryOrder.getType().complementType(), index, price, amount);
-                operatedTrade = new Trade(newEntryOrder, newExitOrder);
-                Trade remainTrade = new Trade(entryOrder.getType());
-                remainTrade.operate(entryOrder.getIndex(), entryOrder.getPrice(), entryAmount.minus(amount));
-                openedTrades.add(remainTrade);
-                refreshTrade();
-                closedTrades.add(operatedTrade);
-            } else if (entryAmount.isLessThan(amount)) {
-                while (amount.isGreaterThan(Decimal.ZERO) && operatedTrade.getEntry() != null) {
-                    entryAmount = operatedTrade.getEntry().getAmount();
-                    if (amount.isGreaterThan(entryAmount)) {
-                        amount = amount.minus(entryAmount);
-                        newOrder = operatedTrade.operate(index, price, entryAmount);
-                    } else {
-                        newOrder = operatedTrade.operate(index, price, amount);
-                    }
-                    openedTrades.remove(operatedTrade);
+                if (entryAmount.equals(exitAmount)) {
+                    newOrder = operatedExitTrade.operate(index, price, exitAmount);
+                    exitAmount = Decimal.ZERO;
+                    closedTrades.add(operatedExitTrade);
+                } else if (entryAmount.isGreaterThan(exitAmount)) {
+                    OrderType entryType = entryOrder.getType();
+                    int entryIndex = entryOrder.getIndex();
+                    Decimal entryPrice = entryOrder.getPrice();
+                    Order newEntryOrder = createOrder(entryType, entryIndex, entryPrice, exitAmount);
+                    Order newExitOrder = createOrder(entryType.complementType(), index, price, exitAmount);
+                    operatedExitTrade = new Trade(newEntryOrder, newExitOrder);
+                    Trade remainTrade = new Trade(entryType);
+                    remainTrade.operate(entryIndex, entryPrice, entryAmount.minus(exitAmount));
+                    exitAmount = Decimal.ZERO;
+                    openedTrades.add(remainTrade);
                     refreshTrade();
-                    closedTrades.add(operatedTrade);
-                    operatedTrade = getCurrentTrade();
+                    closedTrades.add(operatedExitTrade);
+                } else if (entryAmount.isLessThan(exitAmount)) {
+                    exitAmount = exitAmount.minus(entryAmount);
+                    newOrder = operatedExitTrade.operate(index, price, entryAmount);
+                    closedTrades.add(operatedExitTrade);
+                    operatedExitTrade = getCurrentTrade();
                 }
-            }
-            this.action = StrategyAction.EXIT;
-            return true;
+            } while (operatedExitTrade.isOpened());
         }
-        return false;
+        this.action = StrategyAction.EXIT;
+        return true;
     }
 
     @Override
@@ -191,11 +187,11 @@ public class BaseTradingManager implements TradingManager {
 
     }
 
-    private Order createOrder(Order.OrderType type, int index, Decimal price, Decimal amount) {
+    private Order createOrder(OrderType type, int index, Decimal price, Decimal amount) {
         Order createdOrder = null;
-        if (type.equals(Order.OrderType.BUY)) {
+        if (type.equals(OrderType.BUY)) {
             createdOrder = Order.buyAt(index, price, amount);
-        } else if (type.equals(Order.OrderType.SELL)) {
+        } else if (type.equals(OrderType.SELL)) {
             createdOrder = Order.sellAt(index, price, amount);
         }
         return createdOrder;
