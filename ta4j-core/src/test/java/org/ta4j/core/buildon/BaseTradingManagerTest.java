@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BaseTradingManagerTest {
 
-    private Trade trade1, trade2;
+    private Trade trade1, trade2, trade3;
 
     @Test
     public void emptyRecordTest() {
@@ -426,112 +426,397 @@ public class BaseTradingManagerTest {
 
     @Test
     public void closedRecord_Enter1_BuildOn2_Exit3_AmountTest() {
-        TradingManager closedRecord = new BaseTradingManager();
+        TradingManager difficultRecord = new BaseTradingManager();
 
-        assertNotNull(closedRecord.getCurrentTrade());
-        assertTrue(closedRecord.enter(0, Decimal.NaN, Decimal.ONE));
-        trade1 = closedRecord.getOpenTradeToRecord();
-        assertEquals(1, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertNull(trade1.getExit());
 
-        assertNotNull(closedRecord.getCurrentTrade());
-        assertTrue(closedRecord.buildOn(1, Decimal.NaN, Decimal.TWO));
-        trade1 = closedRecord.getOpenTradeToRecord();
-        assertEquals(2, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.buildOn(1, Decimal.NaN, Decimal.TWO));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), trade1.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertNull(trade1.getExit());
 
-        assertTrue(closedRecord.exit(3, Decimal.NaN, Decimal.THREE));
-        assertNotNull(closedRecord.getCurrentTrade());
-        List<Trade> closedTradesToRecord = closedRecord.getClosedTradesToRecord();
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.THREE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
         assertEquals(2, closedTradesToRecord.size());
         trade1 = closedTradesToRecord.get(0);
         trade2 = closedTradesToRecord.get(1);
-        assertEquals(0, closedRecord.getOpenedTrades().size());
-        assertNull(closedRecord.getCurrentTrade().getEntry());
+        assertEquals(0, difficultRecord.getOpenedTrades().size());
+        assertNull(difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
         assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), trade2.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.TWO), trade2.getExit());
     }
 
     @Test
     public void closedRecord_Enter1_BuildOn1_Exit3_AmountTest() {
-        TradingManager closedRecord = new BaseTradingManager();
+        TradingManager difficultRecord = new BaseTradingManager();
 
-        assertNotNull(closedRecord.getCurrentTrade());
-        assertTrue(closedRecord.enter(0, Decimal.NaN, Decimal.ONE));
-        trade1 = closedRecord.getOpenTradeToRecord();
-        assertEquals(1, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertNull(trade1.getExit());
 
-        assertNotNull(closedRecord.getCurrentTrade());
-        assertTrue(closedRecord.buildOn(1, Decimal.NaN, Decimal.ONE));
-        trade1 = closedRecord.getOpenTradeToRecord();
-        assertEquals(2, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.buildOn(1, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), trade1.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertNull(trade1.getExit());
 
-        assertTrue(closedRecord.exit(3, Decimal.NaN, Decimal.THREE));
-        assertNotNull(closedRecord.getCurrentTrade());
-        List<Trade> closedTradesToRecord = closedRecord.getClosedTradesToRecord();
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.THREE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
         assertEquals(2, closedTradesToRecord.size());
         trade1 = closedTradesToRecord.get(0);
         trade2 = closedTradesToRecord.get(1);
-        assertEquals(0, closedRecord.getOpenedTrades().size());
-        assertNull(closedRecord.getCurrentTrade().getEntry());
+        assertEquals(0, difficultRecord.getOpenedTrades().size());
+        assertNull(difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
         assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), trade2.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade2.getExit());
     }
 
     @Test
     public void closedRecord_Enter1_BuildOn3_Exit3_AmountTest() {
-        TradingManager closedRecord = new BaseTradingManager();
+        TradingManager difficultRecord = new BaseTradingManager();
 
-        assertNotNull(closedRecord.getCurrentTrade());
-        assertTrue(closedRecord.enter(0, Decimal.NaN, Decimal.ONE));
-        trade1 = closedRecord.getOpenTradeToRecord();
-        assertEquals(1, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertNull(trade1.getExit());
 
-        assertNotNull(closedRecord.getCurrentTrade());
-        assertTrue(closedRecord.buildOn(1, Decimal.NaN, Decimal.THREE));
-        trade1 = closedRecord.getOpenTradeToRecord();
-        assertEquals(2, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.buildOn(1, Decimal.NaN, Decimal.THREE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.THREE), trade1.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertNull(trade1.getExit());
 
-        assertTrue(closedRecord.exit(3, Decimal.NaN, Decimal.THREE));
-        assertNotNull(closedRecord.getCurrentTrade());
-        List<Trade> closedTradesToRecord = closedRecord.getClosedTradesToRecord();
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.THREE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
         assertEquals(2, closedTradesToRecord.size());
         trade1 = closedTradesToRecord.get(0);
         trade2 = closedTradesToRecord.get(1);
-        assertEquals(1, closedRecord.getOpenedTrades().size());
-        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), closedRecord.getCurrentTrade().getEntry());
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
         assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
         assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), trade2.getEntry());
-        assertNull(closedRecord.getCurrentTrade().getExit());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
         assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.TWO), trade2.getExit());
+    }
+
+    @Test
+    public void closedRecord_Enter1_BuildOn3_Exit3_Exit1_AmountTest() {
+        TradingManager difficultRecord = new BaseTradingManager();
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.buildOn(1, Decimal.NaN, Decimal.THREE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.THREE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.THREE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(2, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        trade2 = closedTradesToRecord.get(1);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), trade2.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.TWO), trade2.getExit());
+
+        assertTrue(difficultRecord.exit(4, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(0, difficultRecord.getOpenedTrades().size());
+        assertNull(difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(4, Decimal.NaN, Decimal.ONE), trade1.getExit());
+    }
+
+    @Test
+    public void closedRecord_Enter1_BuildOn3_Exit2_Exit1_AmountTest() {
+        TradingManager difficultRecord = new BaseTradingManager();
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.buildOn(1, Decimal.NaN, Decimal.THREE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.THREE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.TWO));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(2, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        trade2 = closedTradesToRecord.get(1);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), trade2.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade2.getExit());
+
+        assertTrue(difficultRecord.exit(4, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(4, Decimal.NaN, Decimal.ONE), trade1.getExit());
+    }
+
+    @Test
+    public void closedRecord_Enter1_BuildOn3_Exit2_Exit3_AmountTest() {
+        TradingManager difficultRecord = new BaseTradingManager();
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.ONE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.buildOn(1, Decimal.NaN, Decimal.THREE));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.THREE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.TWO));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(2, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        trade2 = closedTradesToRecord.get(1);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.ONE), trade2.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade2.getExit());
+
+        assertTrue(difficultRecord.exit(4, Decimal.NaN, Decimal.THREE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(0, difficultRecord.getOpenedTrades().size());
+        assertNull(difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(1, Decimal.NaN, Decimal.TWO), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(4, Decimal.NaN, Decimal.TWO), trade1.getExit());
+    }
+
+    @Test
+    public void closedRecord_Enter2_Exit1_BuildOn1_Exit2_AmountTest() {
+        TradingManager difficultRecord = new BaseTradingManager();
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.TWO));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.TWO), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.TWO), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(1, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(1, Decimal.NaN, Decimal.ONE), trade1.getExit());
+
+        assertTrue(difficultRecord.buildOn(2, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(2, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.TWO));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(2, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        trade2 = closedTradesToRecord.get(1);
+        assertEquals(0, difficultRecord.getOpenedTrades().size());
+        assertNull(difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertEquals(Order.buyAt(2, Decimal.NaN, Decimal.ONE), trade2.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade2.getExit());
+    }
+
+    @Test
+    public void closedRecord_Enter2_Exit1_BuildOn1_Exit1_AmountTest() {
+        TradingManager difficultRecord = new BaseTradingManager();
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.TWO));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.TWO), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.TWO), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(1, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(1, Decimal.NaN, Decimal.ONE), trade1.getExit());
+
+        assertTrue(difficultRecord.buildOn(2, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(2, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(2, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
+    }
+
+    @Test
+    public void closedRecord_Enter2_Exit1_BuildOn1_Exit3_AmountTest() {
+        TradingManager difficultRecord = new BaseTradingManager();
+
+        assertNotNull(difficultRecord.getCurrentTrade());
+        assertTrue(difficultRecord.enter(0, Decimal.NaN, Decimal.TWO));
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.TWO), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.TWO), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(1, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        List<Trade> closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(1, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        assertEquals(1, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(1, Decimal.NaN, Decimal.ONE), trade1.getExit());
+
+        assertTrue(difficultRecord.buildOn(2, Decimal.NaN, Decimal.ONE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        trade1 = difficultRecord.getOpenTradeToRecord();
+        assertEquals(2, difficultRecord.getOpenedTrades().size());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(2, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertNull(trade1.getExit());
+
+        assertTrue(difficultRecord.exit(3, Decimal.NaN, Decimal.THREE));
+        assertNotNull(difficultRecord.getCurrentTrade());
+        closedTradesToRecord = difficultRecord.getClosedTradesToRecord();
+        assertEquals(2, closedTradesToRecord.size());
+        trade1 = closedTradesToRecord.get(0);
+        trade2 = closedTradesToRecord.get(1);
+        assertEquals(0, difficultRecord.getOpenedTrades().size());
+        assertNull(difficultRecord.getCurrentTrade().getEntry());
+        assertEquals(Order.buyAt(0, Decimal.NaN, Decimal.ONE), trade1.getEntry());
+        assertEquals(Order.buyAt(2, Decimal.NaN, Decimal.ONE), trade2.getEntry());
+        assertNull(difficultRecord.getCurrentTrade().getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade1.getExit());
+        assertEquals(Order.sellAt(3, Decimal.NaN, Decimal.ONE), trade2.getExit());
     }
 }
