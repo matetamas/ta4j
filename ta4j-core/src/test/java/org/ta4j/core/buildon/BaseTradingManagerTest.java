@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BaseTradingManagerTest {
 
-    private Trade trade1, trade2, trade3;
+    private Trade trade1, trade2;
 
     @Test
     public void emptyRecordTest() {

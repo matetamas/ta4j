@@ -126,14 +126,9 @@ public class BaseTradingManager implements TradingManager {
                     exitAmount = Decimal.ZERO;
                     closedTrades.add(operatedExitTrade);
                 } else if (entryAmount.isGreaterThan(exitAmount)) {
-                    OrderType entryType = entryOrder.getType();
-                    int entryIndex = entryOrder.getIndex();
-                    Decimal entryPrice = entryOrder.getPrice();
-                    Order newEntryOrder = createOrder(entryType, entryIndex, entryPrice, exitAmount);
-                    Order newExitOrder = createOrder(entryType.complementType(), index, price, exitAmount);
-                    operatedExitTrade = new Trade(newEntryOrder, newExitOrder);
-                    Trade remainTrade = new Trade(entryType);
-                    remainTrade.operate(entryIndex, entryPrice, entryAmount.minus(exitAmount));
+                    Trade[] operatedAndRemainTrade = separateOperatedAndRemainTrade(entryOrder, index, price, exitAmount);
+                    operatedExitTrade = operatedAndRemainTrade[0];
+                    Trade remainTrade = operatedAndRemainTrade[1];
                     exitAmount = Decimal.ZERO;
                     openedTrades.add(remainTrade);
                     refreshTrade();
@@ -148,6 +143,21 @@ public class BaseTradingManager implements TradingManager {
         }
         this.action = StrategyAction.EXIT;
         return true;
+    }
+
+    private Trade[] separateOperatedAndRemainTrade(Order entryOrder, int index, Decimal price, Decimal exitAmount) {
+        Trade[] operatedAndRemainTrade = new Trade[2];
+        OrderType entryType = entryOrder.getType();
+        int entryIndex = entryOrder.getIndex();
+        Decimal entryPrice = entryOrder.getPrice();
+        Decimal entryAmount = entryOrder.getAmount();
+        Order newEntryOrder = createOrder(entryType, entryIndex, entryPrice, exitAmount);
+        Order newExitOrder = createOrder(entryType.complementType(), index, price, exitAmount);
+        Trade remainTrade = new Trade(entryType);
+        remainTrade.operate(entryIndex, entryPrice, entryAmount.minus(exitAmount));
+        operatedAndRemainTrade[0] = new Trade(newEntryOrder, newExitOrder);
+        operatedAndRemainTrade[1] = remainTrade;
+        return operatedAndRemainTrade;
     }
 
     @Override

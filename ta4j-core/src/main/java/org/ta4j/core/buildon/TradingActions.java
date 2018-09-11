@@ -7,18 +7,26 @@ import org.ta4j.core.TradingRecord;
 
 import java.util.List;
 
-public class TradinActions implements TradingRecord {
+public class TradingActions implements TradingRecord {
     private TradingManager tradingManager;
     private TradingRecordBuildOn tradingRecordBuildOn;
+    private boolean isFinished;
 
-    @Override
-    public Trade getCurrentTrade() {
-        return null;
+    public TradingActions(TradingManager tradingManager, TradingRecordBuildOn tradingRecordBuildOn) {
+        this.tradingManager = tradingManager;
+        this.tradingRecordBuildOn = tradingRecordBuildOn;
+        this.isFinished = false;
     }
 
     @Override
-    public void operate(int index, Decimal price, Decimal amount) {
+    public Trade getCurrentTrade() {
+        return tradingManager.getCurrentTrade();
+    }
 
+    @Override
+    @Deprecated
+    public void operate(int index, Decimal price, Decimal amount) {
+        throw new IllegalStateException("Operate method can't be used");
     }
 
     @Override
@@ -33,26 +41,26 @@ public class TradinActions implements TradingRecord {
 
     @Override
     public List<Trade> getTrades() {
-        return null;
+        return tradingRecordBuildOn.getTrades();
     }
 
     @Override
     public Order getLastOrder() {
-        return null;
+        return tradingRecordBuildOn.getLastOrder();
     }
 
     @Override
     public Order getLastOrder(Order.OrderType orderType) {
-        return null;
+        return tradingRecordBuildOn.getLastOrder(orderType);
     }
 
     @Override
     public Order getLastEntry() {
-        return null;
+        return tradingRecordBuildOn.getLastEntry();
     }
 
     @Override
     public Order getLastExit() {
-        return null;
+        return tradingRecordBuildOn.getLastExit();
     }
 }
