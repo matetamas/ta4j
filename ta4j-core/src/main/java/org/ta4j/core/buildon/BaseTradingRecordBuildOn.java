@@ -48,6 +48,13 @@ public class BaseTradingRecordBuildOn implements TradingRecordBuildOn {
         this.startingType = entryOrderType;
     }
 
+    @Override
+    public void recordListOfClosedTrades(List<Trade> closedTrades) {
+        for (Trade trade : closedTrades) {
+            recordTrade(trade);
+        }
+    }
+
     /**
      * Records an order and the corresponding trade (if closed).
      *

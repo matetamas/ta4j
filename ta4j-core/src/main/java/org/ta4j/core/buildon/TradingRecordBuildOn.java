@@ -50,4 +50,6 @@ public interface TradingRecordBuildOn {
     Order getLastExit();
 
     void recordTrade(Trade trade);
+
+    void recordListOfClosedTrades(List<Trade> closedTrades);
 }
