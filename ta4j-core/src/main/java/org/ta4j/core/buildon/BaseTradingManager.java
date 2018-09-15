@@ -117,8 +117,7 @@ public class BaseTradingManager implements TradingManager {
         while (!openedTrades.isEmpty() && !exitAmount.equals(Decimal.ZERO)) {
             closedTrades = new LinkedList<>();
             do {
-                Order entryOrder = operatedExitTrade.getEntry();
-                Decimal entryAmount = entryOrder.getAmount();
+                Decimal entryAmount = operatedExitTrade.getEntry().getAmount();
                 openedTrades.remove(operatedExitTrade);
                 refreshTrade();
                 if (entryAmount.equals(exitAmount)) {
@@ -126,9 +125,10 @@ public class BaseTradingManager implements TradingManager {
                     exitAmount = Decimal.ZERO;
                     closedTrades.add(operatedExitTrade);
                 } else if (entryAmount.isGreaterThan(exitAmount)) {
-                    Trade[] operatedAndRemainTrade = separateOperatedAndRemainTrade(entryOrder, index, price, exitAmount);
-                    operatedExitTrade = operatedAndRemainTrade[0];
-                    Trade remainTrade = operatedAndRemainTrade[1];
+                    TradeCloseProcessor p = new TradeCloseProcessor(operatedExitTrade);
+                    p.process(index, price, exitAmount);
+                    operatedExitTrade = p.getOperatedTrade();
+                    Trade remainTrade = p.getRemainTrade();
                     exitAmount = Decimal.ZERO;
                     openedTrades.add(remainTrade);
                     refreshTrade();
@@ -143,21 +143,6 @@ public class BaseTradingManager implements TradingManager {
         }
         this.action = StrategyAction.EXIT;
         return true;
-    }
-
-    private Trade[] separateOperatedAndRemainTrade(Order entryOrder, int index, Decimal price, Decimal exitAmount) {
-        Trade[] operatedAndRemainTrade = new Trade[2];
-        OrderType entryType = entryOrder.getType();
-        int entryIndex = entryOrder.getIndex();
-        Decimal entryPrice = entryOrder.getPrice();
-        Decimal entryAmount = entryOrder.getAmount();
-        Order newEntryOrder = createOrder(entryType, entryIndex, entryPrice, exitAmount);
-        Order newExitOrder = createOrder(entryType.complementType(), index, price, exitAmount);
-        Trade remainTrade = new Trade(entryType);
-        remainTrade.operate(entryIndex, entryPrice, entryAmount.minus(exitAmount));
-        operatedAndRemainTrade[0] = new Trade(newEntryOrder, newExitOrder);
-        operatedAndRemainTrade[1] = remainTrade;
-        return operatedAndRemainTrade;
     }
 
     @Override
@@ -197,13 +182,48 @@ public class BaseTradingManager implements TradingManager {
 
     }
 
-    private Order createOrder(OrderType type, int index, Decimal price, Decimal amount) {
-        Order createdOrder = null;
-        if (type.equals(OrderType.BUY)) {
-            createdOrder = Order.buyAt(index, price, amount);
-        } else if (type.equals(OrderType.SELL)) {
-            createdOrder = Order.sellAt(index, price, amount);
+    private class TradeCloseProcessor {
+        private Order entryOrder;
+        private OrderType entryType;
+        private int entryIndex;
+        private Decimal entryPrice;
+        private Decimal entryAmount;
+
+        private Trade operatedTrade;
+        private Trade remainTrade;
+
+        TradeCloseProcessor(Trade trade) {
+            this.entryOrder = trade.getEntry();
+            this.entryType = this.entryOrder.getType();
+            this.entryIndex = this.entryOrder.getIndex();
+            this.entryPrice = this.entryOrder.getPrice();
+            this.entryAmount = this.entryOrder.getAmount();
         }
-        return createdOrder;
+
+        Trade getOperatedTrade() {
+            return operatedTrade;
+        }
+
+        Trade getRemainTrade() {
+            return remainTrade;
+        }
+
+        private Order createOrder(OrderType type, int index, Decimal price, Decimal amount) {
+            Order createdOrder = null;
+            if (type.equals(OrderType.BUY)) {
+                createdOrder = Order.buyAt(index, price, amount);
+            } else if (type.equals(OrderType.SELL)) {
+                createdOrder = Order.sellAt(index, price, amount);
+            }
+            return createdOrder;
+        }
+
+        void process(int index, Decimal price, Decimal exitAmount) {
+            Order newEntryOrder = createOrder(entryType, entryIndex, entryPrice, exitAmount);
+            Order newExitOrder = createOrder(entryType.complementType(), index, price, exitAmount);
+            remainTrade = new Trade(entryType);
+            remainTrade.operate(entryIndex, entryPrice, entryAmount.minus(exitAmount));
+            operatedTrade = new Trade(newEntryOrder, newExitOrder);
+        }
     }
 }
