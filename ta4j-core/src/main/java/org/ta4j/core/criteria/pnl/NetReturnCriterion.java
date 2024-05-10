@@ -25,7 +25,6 @@ package org.ta4j.core.criteria.pnl;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
-import org.ta4j.core.Trade;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.AbstractAnalysisCriterion;
 import org.ta4j.core.num.Num;
@@ -92,8 +91,6 @@ public class NetReturnCriterion extends AbstractAnalysisCriterion {
     private Num calculateProfit(BarSeries series, Position position) {
         if (position.isClosed()) {
             return position.getReturn(series);
-//            Trade entry = position.getEntry();
-//            return position.getProfit().dividedBy(entry.getPricePerAsset(series).plus(entry.getCost())).plus(series.numOf(1));
         }
         return addBase ? series.one() : series.zero();
     }

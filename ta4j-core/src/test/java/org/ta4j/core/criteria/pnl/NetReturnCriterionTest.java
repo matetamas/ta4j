@@ -23,11 +23,9 @@
  */
 package org.ta4j.core.criteria.pnl;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.ta4j.core.*;
 import org.ta4j.core.analysis.cost.CostModel;
-import org.ta4j.core.analysis.cost.FixedTransactionCostModel;
 import org.ta4j.core.analysis.cost.LinearTransactionCostModel;
 import org.ta4j.core.analysis.cost.ZeroCostModel;
 import org.ta4j.core.criteria.AbstractCriterionTest;
@@ -120,15 +118,15 @@ public class NetReturnCriterionTest extends AbstractCriterionTest {
     public void calculateReturnWithWinningShortPositions() {
         MockBarSeries series = new MockBarSeries(numFunction, 100, 95, 100, 80, 85, 70);
         TradingRecord tradingRecord = new BaseTradingRecord(Trade.sellAt(0, series), Trade.buyAt(1, series),
-                Trade.sellAt(2, series), Trade.buyAt(5, series));
+                Trade.sellAt(4, series), Trade.buyAt(5, series));
 
         // include base percentage
         AnalysisCriterion retWithBase = getCriterion();
-        assertNumEquals(1.05 * 1.30, retWithBase.calculate(series, tradingRecord));
+        assertNumEquals((100.0 / 95) * (85.0 / 70), retWithBase.calculate(series, tradingRecord));
 
         // exclude base percentage
         AnalysisCriterion retWithoutBase = getCriterion(false);
-        assertNumEquals(1.05 * 1.30 - 1, retWithoutBase.calculate(series, tradingRecord));
+        assertNumEquals((100.0 / 95) * (85.0 / 70) - 1, retWithoutBase.calculate(series, tradingRecord));
     }
 
     @Test
@@ -139,11 +137,11 @@ public class NetReturnCriterionTest extends AbstractCriterionTest {
 
         // include base percentage
         AnalysisCriterion retWithBase = getCriterion();
-        assertNumEquals(0.95 * 0.70, retWithBase.calculate(series, tradingRecord));
+        assertNumEquals((100.0 / 105) * (100.0 / 130), retWithBase.calculate(series, tradingRecord));
 
         // exclude base percentage
         AnalysisCriterion retWithoutBase = getCriterion(false);
-        assertNumEquals(0.95 * 0.70 - 1, retWithoutBase.calculate(series, tradingRecord));
+        assertNumEquals((100.0 / 105) * (100.0 / 130) - 1, retWithoutBase.calculate(series, tradingRecord));
     }
 
     @Test
