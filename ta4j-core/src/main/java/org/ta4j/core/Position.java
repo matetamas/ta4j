@@ -365,6 +365,21 @@ public class Position implements Serializable {
         }
     }
 
+    public Num getReturn(BarSeries barSeries) {
+        Num entryPrice = getEntry().getNetPrice();
+        Num exitPrice = getExit().getNetPrice();
+
+        return getReturn(entryPrice, exitPrice);
+    }
+
+    private Num getReturn(Num entryPrice, Num exitPrice) {
+        if (getEntry().isBuy()) {
+            return exitPrice.dividedBy(entryPrice);
+        } else {
+            return entryPrice.dividedBy(exitPrice);
+        }
+    }
+
     /**
      * Calculates the total cost of the position.
      *
